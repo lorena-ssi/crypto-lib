@@ -13,10 +13,12 @@ module.exports = class CryptographyInterface {
       throw new Error('Cryptographic classes must have function `random`!')
     } else if (!this.checkSignature) {
       // Checks signature of a message.
+      // checkSignature (signer, signerPublic, signature, verifier)
       /* istanbul ignore next */
       throw new Error('Cryptographic classes must have function `checkSignature`!')
     } else if (!this.signMessage) {
       // Signs a message with a keypair.
+      // signMessage (signer, keys, message)
       /* istanbul ignore next */
       throw new Error('Cryptographic classes must have function `signMessage`!')
     } else if (!this.decryptSymmetric) {
@@ -29,10 +31,12 @@ module.exports = class CryptographyInterface {
       throw new Error('Cryptographic classes must have function `encryptSymmetric`!')
     } else if (!this.decryptAsymmetric) {
       // Decrypts (asymmetric) a message with a keypair.
+      // decryptAsymmetric (fromName, fromKeys, toName, toKeys, message)
       /* istanbul ignore next */
       throw new Error('Cryptographic classes must have function `decryptAsymmetric`!')
     } else if (!this.encryptAsymmetric) {
       // Encrypts (asymmetric) a message with a keypair.
+      // encryptAsymmetric (fromName, fromKeys, toName, toKeys, message)
       /* istanbul ignore next */
       throw new Error('Cryptographic classes must have function `encryptAsymmetric`!')
     } else if (!this.newKeyPair) {
@@ -44,5 +48,27 @@ module.exports = class CryptographyInterface {
       /* istanbul ignore next */
       throw new Error('Cryptographic classes must have function `publicKey`!')
     }
+  }
+
+  async receiveSecureMessage (senderPK, receiverSK, msg) {
+    // Check signature is from senderPK
+    const unsignedMsg = await this.checkSignature(msg, senderPK)
+
+    // Decrypt unsigned msg with receiverSK
+    // we should know details of encryption.
+    const rawMsg = await this.decryptAsymmetric(unsignedMsg, receiverSK)
+
+    return rawMsg
+  }
+
+  async sendSecureMessage (receiverPK, senderSK, msg) {
+    // Encrypt raw msg with receiverPK
+    // we should know details of encryption.
+    const encryptedMsg = await this.encryptAsymmetric(msg, receiverPK)
+
+    // Sign encrypted msg with senderSK (own secretKey)
+    const msgToSend = await this.signMessage(senderSK, encryptedMsg)
+
+    return msgToSend
   }
 }
